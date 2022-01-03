@@ -16,9 +16,7 @@ client.on('ready', async (cliente) => {
     new WOKCommands(client, {
         commandDir: path.join(__dirname, 'comandos'),
         testServers: ['923927113424318485'],
-        // typeScript: true,
     });
-
 });
 
 client.login(config.BOT_TOKEN);
