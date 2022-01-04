@@ -9,6 +9,7 @@ exports.default = {
 
     minArgs: 1,
     expectedArgs: '<num>',
+    syntaxError: 'Uso incorreto! Por favor usar "{PREFIX} adicionar {ARGUMENTS}"',
 
     callback: async ({ message, interaction, args }) => {
         let msg = (message || interaction);

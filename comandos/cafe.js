@@ -15,14 +15,12 @@ exports.default = {
 
     callback: async ({ message, interaction, args, guild, client }) => {
         _client = client;
-        // console.log(guild.members.cache);
         let msg = (message || interaction);
-        // let original = msg;
+
         isMessage = !!message;
         await _reply(msg);
         if (isMessage) {
             message.delete();
-            // original = aux;
         }
         start(msg, args, msg);
     },
@@ -32,7 +30,7 @@ async function _reply(msg) {
     reply = await msg.reply({ content: 'cafe' });
 }
 
-async function editReply(msg = 'cafe') {
+function editReply(msg = 'cafe') {
     reply.edit({ content: msg });
 }
 
@@ -44,7 +42,6 @@ async function start(message, args, original, repeat = []) {
         if (!isMessage) {
             original.editReply({ content: "Aparentemente nenhum usuario pode fazer café." });
         } else {
-            // original.edit
             editReply("Aparentemente nenhum usuario pode fazer café.");
         }
         return;
@@ -96,7 +93,6 @@ async function getUsers(message) {
     return members.map((value) => {
         return value.user;
     });
-
 }
 
 async function getUsersValidos(users, message, repeat = []) {
@@ -120,7 +116,7 @@ function getRandowUser(listUsers) {
     let list = [];
     let min = 0;
     listUsers.forEach((element) => {
-        let num = (1000 / (element.vezes + 1)) + min;
+        let num = (100 / validaValor(element.vezes + 1)) + min;
         list.push({ min: min, max: num, id: element.id, vezes: element.vezes, sorteado: element.sorteado });
         min = num;
     });
@@ -128,6 +124,15 @@ function getRandowUser(listUsers) {
     let valor = list.find((element) => {
         return num >= element.min && num <= element.max;
     });
+    return valor;
+}
+
+function validaValor(valor = 1) {
+    if (valor >= 100) {
+        valor = valor / 100;
+        let aux = parseInt(valor);
+        valor = Math.max(1, (valor - aux) * 100);
+    }
     return valor;
 }
 
