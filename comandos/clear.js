@@ -14,7 +14,7 @@ exports.default = {
     callback: async ({ message, interaction, args }) => {
         let msg = (message || interaction);
         if (!msg.member.permissions.has("MANAGE_MESSAGES")) {
-            message.reply(
+            msg.reply(
                 "você é fraco, lhe falta permissão de `Gerenciar Mensagens` para usar esse comando"
             );
             return;
