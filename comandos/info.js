@@ -7,7 +7,6 @@ exports.default = {
     description: 'Comando para info',
 
     slash: 'both',
-    testOnly: true,
 
     minArgs: 0,
     expectedArgs: '<target>',

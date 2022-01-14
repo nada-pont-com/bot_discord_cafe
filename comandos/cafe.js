@@ -3,7 +3,6 @@ const banco = require("./../data_base.js");
 
 let isMessage = false;
 let _client;
-
 exports.default = {
     category: 'Comando para Sortear para cafe',
     description: 'Comando para Sortear para cafe',
@@ -37,19 +36,27 @@ function editReply(msg = 'cafe') {
 async function start(message, args, original, repeat = []) {
     let users = await getUsers(message);
     let usersValidos = await getUsersValidos(users, message, clone(repeat));
-
+    console.log(message.guild.id);
     if (usersValidos.length == 0) {
-        if (!isMessage) {
-            original.editReply({ content: "Aparentemente nenhum usuario pode fazer café." });
-        } else {
-            editReply("Aparentemente nenhum usuario pode fazer café.");
-        }
+        msgNotUserFind(original);
         return;
     }
     let valor = getRandowUser(usersValidos);
     let user = await getUser(users, valor.id);
-    let msg = await sendEmbed(message, user);
+
+    if(user==undefined){
+        msgNotUserFind(original);
+        return;
+    }
+    let msg = await sendEmbed(message, user,repeat);
     reaction(msg, valor, user, original, args, repeat);
+}
+function msgNotUserFind(original){
+    if (!isMessage) {
+        original.editReply({ content: "Aparentemente nenhum usuario pode fazer café." });
+    } else {
+        editReply("Aparentemente nenhum usuario pode fazer café.");
+    }
 }
 
 function reaction(msg, valor, user, original, args = [], repeat = []) {
@@ -60,7 +67,7 @@ function reaction(msg, valor, user, original, args = [], repeat = []) {
     }
 
     const filter = (reaction, user) => { return (reaction.emoji.name === '✅' || reaction.emoji.name === '❎') && !user.bot };
-    const colector = msg.createReactionCollector({ filter: filter, max: 1, time: 1000 * 15 });
+    const colector = msg.createReactionCollector({ filter: filter, max: 1, time: 1000 * 60 * 15 });
 
     colector.on('collect', (reaction) => {
         if (reaction.emoji.name == '❎') {
@@ -144,7 +151,7 @@ async function getUser(users, id) {
     return user;
 }
 
-async function sendEmbed(message, user) {
+async function sendEmbed(message, user,repeat = []) {
     let author = (message.author || message.user);
     // let avatar = author.displayAvatarURL({ format: 'png', dynamic: true });
     // console.log(user);
@@ -157,6 +164,9 @@ async function sendEmbed(message, user) {
         .setImage(user.displayAvatarURL({ format: 'png', dynamic: true }))
         .setTitle('Cafe')
         .setFooter('cafe');
+        if(repeat.length!=0){
+            embed.addField("Lista", "" + (repeat.map((i)=>{return i.tag;}).join(',')));
+        }
     return await message.channel.send({ embeds: [embed], });
 
 }
