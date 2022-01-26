@@ -44,14 +44,14 @@ async function start(message, args, original, repeat = []) {
     let valor = getRandowUser(usersValidos);
     let user = await getUser(users, valor.id);
 
-    if(user==undefined){
+    if (user == undefined) {
         msgNotUserFind(original);
         return;
     }
-    let msg = await sendEmbed(message, user,repeat);
+    let msg = await sendEmbed(original, user, repeat);
     reaction(msg, valor, user, original, args, repeat);
 }
-function msgNotUserFind(original){
+function msgNotUserFind(original) {
     if (!isMessage) {
         original.editReply({ content: "Aparentemente nenhum usuario pode fazer café." });
     } else {
@@ -60,35 +60,45 @@ function msgNotUserFind(original){
 }
 
 function reaction(msg, valor, user, original, args = [], repeat = []) {
-    let emojis = ['✅', '❎'];
+    let emojis = ['✅', '❎', '❌'];
     // console.log(msg);
     for (const key in emojis) {
         msg.react(emojis[key]);
     }
 
-    const filter = (reaction, user) => { return (reaction.emoji.name === '✅' || reaction.emoji.name === '❎') && !user.bot };
+    const filter = (reaction, _user) => {
+        return ((reaction.emoji.name === '❎' || reaction.emoji.name === '❌') && !_user.bot)
+            || (reaction.emoji.name === '✅' && _user.tag == user.tag);
+    };
     const colector = msg.createReactionCollector({ filter: filter, max: 1, time: 1000 * 60 * 15 });
 
     colector.on('collect', (reaction) => {
-        if (reaction.emoji.name == '❎') {
+        if (reaction.emoji.name === '❎') {
             banco.updateUser(valor.id, msg.guild.id, parseInt(valor.vezes), parseInt(valor.sorteado) + 1);
             msg.delete();
             repeat.push(user);
             start(msg, args, original, repeat);
-        } else {
+        } else if (reaction.emoji.name === '✅') {
             banco.updateUser(valor.id, msg.guild.id, parseInt(valor.vezes) + 1, parseInt(valor.sorteado) + 1);
             // msg.deleteReply();
-            if (args[0] != undefined) {
-                let aux = args[0];
+            // if (args[0] != undefined) {
+            //     let aux = args[0];
+            // }
+        } else {
+            msg.delete();
+            if (!isMessage) {
+                original.editReply({ content: "Cancelado o sorteio do café." });
+            } else {
+                editReply("Cancelado o sorteio do café.");
             }
         }
         colector.stop();
     });
     colector.on('end', (collect, reason) => {
-        // console.log(collect);
-        // if (collect.size() == 0) {
-        //     console.log('\nteste\n');
-        // }
+        if (collect.size == 0) {
+            // msg.delete();
+            banco.updateUser(valor.id, msg.guild.id, parseInt(valor.vezes) + 1, parseInt(valor.sorteado) + 1);
+        }
     });
 }
 
@@ -151,7 +161,7 @@ async function getUser(users, id) {
     return user;
 }
 
-async function sendEmbed(message, user,repeat = []) {
+async function sendEmbed(message, user, repeat = []) {
     let author = (message.author || message.user);
     // let avatar = author.displayAvatarURL({ format: 'png', dynamic: true });
     // console.log(user);
@@ -164,11 +174,10 @@ async function sendEmbed(message, user,repeat = []) {
         .setImage(user.displayAvatarURL({ format: 'png', dynamic: true }))
         .setTitle('Cafe')
         .setFooter('cafe');
-        if(repeat.length!=0){
-            embed.addField("Lista", "" + (repeat.map((i)=>{return i.tag;}).join(',')));
-        }
+    if (repeat.length != 0) {
+        embed.addField("Lista", "" + (repeat.map((i) => { return i.tag; }).join(',')));
+    }
     return await message.channel.send({ embeds: [embed], });
-
 }
 
 function clone(list = []) {

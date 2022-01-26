@@ -10,10 +10,13 @@ module.exports.usersCafe = (usuarios = [], servidor) => {
     let promesa = new Promise((resolve, reject) => {
         let list = [];
         db.each(`SELECT * FROM user WHERE servidor='${servidor}'`, (erro, dados) => {
+            let tam = usuarios.length;
             usuarios = usuarios.filter((element) => {
                 return element.id != dados.id;
             })
-            list.push(dados);
+            if (tam != usuarios.length) {
+                list.push(dados);
+            }
         }, (erro, count) => {
             if (erro) {
                 console.error(erro.message);
