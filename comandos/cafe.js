@@ -167,7 +167,7 @@ async function sendEmbed(message, user, repeat = []) {
     // console.log(user);
     let embed = new Discord.MessageEmbed()
         .setTimestamp()
-        .setTitle('teste')
+        .setTitle('Titulo')
         .setAuthor(author.tag)
         .setColor('#000000')
         .setDescription(`${user} foi sorteado para fazer cafe.`)
