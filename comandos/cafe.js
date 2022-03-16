@@ -51,6 +51,7 @@ async function start(message, args, original, repeat = []) {
     let msg = await sendEmbed(original, user, repeat);
     reaction(msg, valor, user, original, args, repeat);
 }
+
 function msgNotUserFind(original) {
     if (!isMessage) {
         original.editReply({ content: "Aparentemente nenhum usuario pode fazer café." });
@@ -163,17 +164,24 @@ async function getUser(users, id) {
 
 async function sendEmbed(message, user, repeat = []) {
     let author = (message.author || message.user);
+    if (!isMessage) {
+        message.editReply({ content: `${user} foi sorteado para fazer cafe.` });
+    } else {
+        editReply(`${user} foi sorteado para fazer cafe.`);
+    }
+    // editReply(`${user} foi sorteado para fazer cafe.`);
     // let avatar = author.displayAvatarURL({ format: 'png', dynamic: true });
     // console.log(user);
     let embed = new Discord.MessageEmbed()
         .setTimestamp()
         .setTitle('Titulo')
-        .setAuthor(author.tag)
+        // .setAuthor(author.tag)
         .setColor('#000000')
         .setDescription(`${user} foi sorteado para fazer cafe.`)
         .setImage(user.displayAvatarURL({ format: 'png', dynamic: true }))
         .setTitle('Cafe')
-        .setFooter('cafe');
+        // .setFooter('cafe')
+        ;
     if (repeat.length != 0) {
         embed.addField("Lista", "" + (repeat.map((i) => { return i.tag; }).join(',')));
     }
