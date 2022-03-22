@@ -7,7 +7,7 @@ exports.default = {
     slash: 'both',
 
     callback: async ({ message, interaction, user, guild, args }) => {
-        let msg  = message || interaction;
+        let msg = message || interaction;
         let users = await getUsers(msg);
         let usersDados = await banco.usersCafe(users, msg.guild.id);
         sendEmbed(msg, users, usersDados);
@@ -22,37 +22,48 @@ async function getUsers(message) {
         return value.user;
     });
 }
-function _montarTabela(users = [],userDados = []){
-    let max = 0;
+function _montarTabela(users = [], userDados = []) {
+    let max = 0, min = 0, list = [];
     users.forEach(user => {
-        if(user.username.length>max){
+        if (user.username.length > max) {
             max = user.username.length;
         }
     });
-    let espaco = '                                                      '
-    let aux = espaco.substring(0, max/2);
-    let texto = `${aux} Nome ${aux}| Sorteado | Fez \n`;
-    for (let i in userDados) {
-        const userD = userDados[i];
+    userDados.forEach((element) => {
+        let num = (100 / validaValor(element.cafe + 1)) + min;
+        list.push({ min: min, max: num, usuario: element.usuario, cafe: element.cafe, sorteado: element.sorteado });
+        min = num;
+    });
+    let texto = ` Nome | Sorteado | Fez | % \n`;
+    for (let i in list) {
+        const userD = list[i];
         const user = users.find((user) => {
-            return user.id == userD.id;
+            return user.id == userD.usuario;
         });
-        aux = espaco.substring(0,(max+4)-user.username.length);
-        
-        texto += `${aux} ${user.username} ${aux} | ${userD.sorteado} | ${userD.vezes}\n`
+        texto += `${user.username} | ${userD.sorteado} | ${userD.cafe} | ${(((userD.max - userD.min) / min).toPrecision(2) * 100).toFixed(2)}%\n`
     }
     return texto;
 }
 
 async function sendEmbed(message, users, usersDados) {
     let author = (message.author || message.user);
-    
+
     let embed = new Discord.MessageEmbed()
         .setTimestamp()
         .setTitle('Info')
         .setAuthor(author.tag)
         .setColor('#000000')
-        .setDescription(_montarTabela(users,usersDados))
+        .setDescription(_montarTabela(users, usersDados))
         .setFooter('info');
     message.reply({ embeds: [embed], });
+}
+
+
+function validaValor(valor = 1) {
+    if (valor >= 100) {
+        valor = valor / 100;
+        let aux = parseInt(valor);
+        valor = Math.max(1, (valor - aux) * 100);
+    }
+    return valor;
 }

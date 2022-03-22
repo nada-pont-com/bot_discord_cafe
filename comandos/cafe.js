@@ -118,7 +118,7 @@ async function getUsersValidos(users, message, repeat = []) {
     listUsers = listUsers.filter((element) => {
         let valida = true;
         for (const key in repeat) {
-            if (element.id == repeat[key].id) {
+            if (element.usuario == repeat[key].id) {
                 valida = false;
                 repeat.splice(key, 1);
                 break;
@@ -133,8 +133,8 @@ function getRandowUser(listUsers) {
     let list = [];
     let min = 0;
     listUsers.forEach((element) => {
-        let num = (100 / validaValor(element.vezes + 1)) + min;
-        list.push({ min: min, max: num, id: element.id, vezes: element.vezes, sorteado: element.sorteado });
+        let num = (100 / validaValor(element.cafe + 1)) + min;
+        list.push({ min: min, max: num, id: element.id, cafe: element.cafe, sorteado: element.sorteado });
         min = num;
     });
     let num = Math.floor(Math.random() * min);
