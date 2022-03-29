@@ -133,3 +133,16 @@ function select_bd(sql = '', params = [], callback = undefined) {
         });
     });
 }
+
+
+/* 
+SELECT 
+	u2.id as id_usuario,
+	s.id as id_servidor,
+	u.vezes as cafe,	
+	u.sorteado 
+FROM "user" u 
+	left join usuario u2 on u2.id_usuario = u.id 
+	left join servidor s on s.id_servidor = u.servidor 
+
+*/
