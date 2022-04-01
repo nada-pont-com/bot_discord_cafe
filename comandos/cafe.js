@@ -13,6 +13,7 @@ exports.default = {
     // expectedArgs: '<tag>',
 
     callback: async ({ message, interaction, args, guild, client }) => {
+
         _client = client;
         let msg = (message || interaction);
 
@@ -36,14 +37,12 @@ function editReply(msg = 'cafe') {
 async function start(message, args, original, repeat = []) {
     let users = await getUsers(message);
     let usersValidos = await getUsersValidos(users, message, clone(repeat));
-    console.log(message.guild.id);
     if (usersValidos.length == 0) {
         msgNotUserFind(original);
         return;
     }
     let valor = getRandowUser(usersValidos);
     let user = await getUser(users, valor.id);
-
     if (user == undefined) {
         msgNotUserFind(original);
         return;
@@ -60,26 +59,32 @@ function msgNotUserFind(original) {
 }
 
 function reaction(msg, valor, user, original, args = [], repeat = []) {
-    let emojis = ['✅', '❎', '❌'];
+    // ✅ 🔄 ❎ ❌
+    let emojis = ['✅', '🔄', '❌'];
     // console.log(msg);
     for (const key in emojis) {
         msg.react(emojis[key]);
     }
 
     const filter = (reaction, _user) => {
-        return ((reaction.emoji.name === '❎' || reaction.emoji.name === '❌') && !_user.bot)
+        return ((reaction.emoji.name === '🔄' || reaction.emoji.name === '❌') && !_user.bot)
             || (reaction.emoji.name === '✅' && _user.tag == user.tag);
     };
     const colector = msg.createReactionCollector({ filter: filter, max: 1, time: 1000 * 60 * 15 });
 
     colector.on('collect', (reaction) => {
-        if (reaction.emoji.name === '❎') {
-            banco.updateUser(valor.id, msg.guild.id, parseInt(valor.vezes), parseInt(valor.sorteado) + 1);
+        if (reaction.emoji.name === '🔄') {
+            banco.updateUser(valor.id, msg.guild.id, parseInt(valor.cafe), parseInt(valor.sorteado) + 1);
             msg.delete();
             repeat.push(user);
             start(msg, args, original, repeat);
         } else if (reaction.emoji.name === '✅') {
-            banco.updateUser(valor.id, msg.guild.id, parseInt(valor.vezes) + 1, parseInt(valor.sorteado) + 1);
+            banco.updateUser(valor.id, msg.guild.id, parseInt(valor.cafe) + 1, parseInt(valor.sorteado) + 1);
+            if (!isMessage) {
+                original.editReply({ content: "Café. " + user.username });
+            } else {
+                editReply("Café. " + user.username);
+            }
             // msg.deleteReply();
             // if (args[0] != undefined) {
             //     let aux = args[0];
@@ -96,8 +101,11 @@ function reaction(msg, valor, user, original, args = [], repeat = []) {
     });
     colector.on('end', (collect, reason) => {
         if (collect.size == 0) {
-            // msg.delete();
-            banco.updateUser(valor.id, msg.guild.id, parseInt(valor.vezes) + 1, parseInt(valor.sorteado) + 1);
+            if (!isMessage) {
+                original.editReply({ content: "😥" });
+            } else {
+                editReply("😥");
+            }
         }
     });
 }
@@ -134,7 +142,7 @@ function getRandowUser(listUsers) {
     let min = 0;
     listUsers.forEach((element) => {
         let num = (100 / validaValor(element.cafe + 1)) + min;
-        list.push({ min: min, max: num, id: element.id, cafe: element.cafe, sorteado: element.sorteado });
+        list.push({ min: min, max: num, id: element.usuario, cafe: element.cafe, sorteado: element.sorteado });
         min = num;
     });
     let num = Math.floor(Math.random() * min);
@@ -168,12 +176,10 @@ async function sendEmbed(message, user, repeat = []) {
     let embed = new Discord.MessageEmbed()
         .setTimestamp()
         .setTitle('Titulo')
-        .setAuthor(author.tag)
         .setColor('#000000')
         .setDescription(`${user} foi sorteado para fazer cafe.`)
         .setImage(user.displayAvatarURL({ format: 'png', dynamic: true }))
-        .setTitle('Cafe')
-        .setFooter('cafe');
+        .setTitle('Cafe');
     if (repeat.length != 0) {
         embed.addField("Lista", "" + (repeat.map((i) => { return i.tag; }).join(',')));
     }

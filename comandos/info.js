@@ -31,7 +31,7 @@ exports.default = {
         }
         let list = await banco.getUsers(guild.id);
         let userDados = list.find((item) => {
-            return item.id == userBusca.id;
+            return item.id == userBusca.usuario;
         });
 
         sendEmbed((message || interaction), userBusca, userDados);
@@ -51,18 +51,15 @@ async function getUsers(message) {
 
 async function sendEmbed(message, user, userDados) {
     let author = (message.author || message.user);
-
     let embed = new Discord.MessageEmbed()
         .setTimestamp()
         .setTitle('Info')
-        .setAuthor(author.tag)
         .setColor('#000000')
         .setDescription(`informações do ${user}.`)
         .addField("Sorteado", "Vl: " + (userDados.sorteado || "0"))
-        .addField("Vezes que fez cafe", "Vl: " + (userDados.vezes || "0"))
+        .addField("Vezes que fez cafe", "Vl: " + (userDados.cafe || "0"))
         .setImage(user.displayAvatarURL({ format: 'png', dynamic: true }))
-        .setTitle('Info')
-        .setFooter('info');
+        .setTitle('Info');
     message.reply({ embeds: [embed], });
 
 }

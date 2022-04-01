@@ -22,14 +22,23 @@ module.exports.start = () => {
 module.exports.usersCafe = async (usuarios = [], servidor) => {
     // let promesa = new Promise((resolve, reject) => {
     // let list = [];
-    let list = await select_bd(`SELECT s.id as s, u.id as u, us.sorteado, us.cafe, u.id_usuario as usuario, s.id_servidor as servidor  FROM usuario_servidor us JOIN usuario u on u.id =us.usuario_id JOIN servidor s on s.id = us.servidor_id WHERE s.id_servidor='${servidor}'`,
+    let list = await select_bd(`SELECT s.id as s, 
+            u.id as u, 
+            _us.sorteado,
+            _us.cafe,
+            u.id_usuario as usuario,
+            s.id_servidor as servidor
+        FROM usuario_servidor _us 
+            JOIN usuario u on u.id = _us.id_usuario 
+            JOIN servidor s on s.id =  _us.id_servidor
+        WHERE s.id_servidor='${servidor}'`, [],
         (row, list = []) => {
             let tam = usuarios.length;
             usuarios = usuarios.filter((element) => {
                 return element.id != row.usuario;
             });
             if (tam != usuarios.length) {
-                list.push(dados);
+                list.push(row);
             }
         }
     );
@@ -85,23 +94,46 @@ async function insert_servidor_usuario(servidor_id, usuario_id) {
 module.exports.getUsers = (servidor) => {
     let promesa = new Promise((resolve, reject) => {
         let list = [];
-        db.each(`SELECT u.id_usuario as id FROM usuario_servidor us JOIN usuario u on u.id = us.usuario_id JOIN servidor s on s.id = us.servidor_id WHERE s.id_servidor='${servidor}'`, (erro, dados) => {
-            list.push(dados);
-        }, (erro) => {
-            resolve(list);
-        });
+        db.each(`SELECT s.id as s, u.id as u, us.sorteado, us.cafe, u.id_usuario as usuario, s.id_servidor as servidor
+            FROM usuario_servidor us 
+                JOIN usuario u on u.id = us.id_usuario
+                JOIN servidor s on s.id = us.id_servidor
+            WHERE s.id_servidor='${servidor}'`,
+            (erro, dados) => {
+                list.push(dados);
+            }, (erro) => {
+                resolve(list);
+            });
     });
     return promesa;
 }
 
 
 module.exports.updateUser = (user, servidor, vezes, sorteado) => {
-    let promesa = new Promise((resolve, reject) => {
-        db.run(`UPDATE usuario_servidor us JOIN usuario u on u.id =us.usuario_id JOIN servidor s on s.id = us.servidor_id set cafe=?,sorteado=? WHERE id_usuario=? AND id_servidor=?`, [vezes, sorteado, user, servidor], function (erro) {
+    let promesa = new Promise(async (resolve, reject) => {
+        let aux = await select_bd(`SELECT _us.id
+            FROM usuario_servidor _us 
+                JOIN usuario u on u.id = _us.id_usuario 
+                JOIN servidor s on s.id =  _us.id_servidor
+            WHERE s.id_servidor=? AND u.id_usuario=?`, [servidor, user]
+        );
+        db.run(`UPDATE usuario_servidor set cafe=?,sorteado=? WHERE id=?`, [vezes, sorteado, aux[0].id], function (erro) {
             if (erro) {
                 console.error(erro.message);
             }
             // console.log(`Row(s) updated: ${this.changes}`);
+            resolve(erro == null);
+        });
+    });
+    return promesa;
+}
+
+module.exports.log_cafe = (user, servidor) => {
+    let promesa = new Promise((resolve, reject) => {
+        db.run(`INSERT log_cafe (id_usuario, id_servidor, data) VALUES (?,?,?)`, [user, servidor, new Date().toDateString()], function (erro) {
+            if (erro) {
+                console.error(erro.message);
+            }
             resolve(erro == null);
         });
     });
@@ -137,12 +169,12 @@ function select_bd(sql = '', params = [], callback = undefined) {
 
 /* 
 SELECT 
-	u2.id as id_usuario,
-	s.id as id_servidor,
-	u.vezes as cafe,	
-	u.sorteado 
+    u2.id as id_usuario,
+    s.id as id_servidor,
+    u.vezes as cafe,	
+    u.sorteado 
 FROM "user" u 
-	left join usuario u2 on u2.id_usuario = u.id 
-	left join servidor s on s.id_servidor = u.servidor 
+    left join usuario u2 on u2.id_usuario = u.id 
+    left join servidor s on s.id_servidor = u.servidor 
 
 */

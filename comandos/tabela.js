@@ -51,10 +51,8 @@ async function sendEmbed(message, users, usersDados) {
     let embed = new Discord.MessageEmbed()
         .setTimestamp()
         .setTitle('Info')
-        .setAuthor(author.tag)
         .setColor('#000000')
-        .setDescription(_montarTabela(users, usersDados))
-        .setFooter('info');
+        .setDescription(_montarTabela(users, usersDados));
     message.reply({ embeds: [embed], });
 }
 
