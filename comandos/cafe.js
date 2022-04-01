@@ -74,17 +74,14 @@ function reaction(msg, valor, user, original, args = [], repeat = []) {
 
     colector.on('collect', (reaction) => {
         if (reaction.emoji.name === '🔄') {
+
             banco.updateUser(valor.id, msg.guild.id, parseInt(valor.cafe), parseInt(valor.sorteado) + 1);
             msg.delete();
             repeat.push(user);
             start(msg, args, original, repeat);
         } else if (reaction.emoji.name === '✅') {
             banco.updateUser(valor.id, msg.guild.id, parseInt(valor.cafe) + 1, parseInt(valor.sorteado) + 1);
-            if (!isMessage) {
-                original.editReply({ content: "Café. " + user.username });
-            } else {
-                editReply("Café. " + user.username);
-            }
+
             // msg.deleteReply();
             // if (args[0] != undefined) {
             //     let aux = args[0];
@@ -170,6 +167,11 @@ async function getUser(users, id) {
 }
 
 async function sendEmbed(message, user, repeat = []) {
+    if (!isMessage) {
+        message.editReply({ content: "Café. " + user.username });
+    } else {
+        editReply("Café. " + user.username);
+    }
     let author = (message.author || message.user);
     // let avatar = author.displayAvatarURL({ format: 'png', dynamic: true });
     // console.log(user);
