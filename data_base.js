@@ -130,7 +130,7 @@ module.exports.updateUser = (user, servidor, vezes, sorteado) => {
 
 module.exports.log_cafe = (user, servidor) => {
     let promesa = new Promise((resolve, reject) => {
-        db.run(`INSERT log_cafe (id_usuario, id_servidor, data) VALUES (?,?,?)`, [user, servidor, new Date().toDateString()], function (erro) {
+        db.run(`INSERT into log_cafe (id_usuario, id_servidor, data) VALUES (?,?,?)`, [user, servidor, new Date().toDateString()], function (erro) {
             if (erro) {
                 console.error(erro.message);
             }
@@ -138,6 +138,26 @@ module.exports.log_cafe = (user, servidor) => {
         });
     });
     return promesa;
+}
+
+module.exports.cria_grupo = async (nome, servidor) => {
+    let id_s = (await select_bd('SELECT id from servidor WHERE id_servidor=?', [servidor]))[0];
+    return await query_bd('INSERT into grupo (nome,servidor_id) values (?,?)', [nome, id_s['id']])
+}
+
+module.exports.grupo_add = async (users, grupo, type_user) => {
+    let list = [];
+
+    for (let i in users) {
+        const user = users[i];
+        list[list.length] = query_bd('INSERT into grupo_usuario (id_u,id_s) values (?,?)', [user, grupo]);
+    }
+    list = await Promise.all(list);
+    let retorno = [];
+    for (let i in list) {
+        retorno[i] = users[i] + ':' + list[i];
+    }
+    return retorno.join(',');
 }
 
 
