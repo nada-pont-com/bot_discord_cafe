@@ -1,6 +1,5 @@
-const { MessageEmbed, MessageSelectMenu, MessageActionRow } = require("discord.js");
-const banco = require("./../data_base.js");
-
+const { MessageEmbed, MessageSelectMenu, MessageActionRow, MessageButton } = require("discord.js");
+const { cria_grupo, get_grupo, add_grupo, usersCafe, get_users } = require("./../data_base.js");
 
 exports.default = {
     category: 'Grupo',
@@ -22,7 +21,7 @@ exports.default = {
             interaction.reply({ content: '.' });
             return;
         }
-        banco.usersCafe();
+        usersCafe();
         let sevidor = interaction.guild.id;
         let data = Date.now();
         switch (args[0]) {
@@ -30,13 +29,14 @@ exports.default = {
 
 
 
-                let embed = MessageEmbed()
+                let embed = new MessageEmbed()
                     .setTitle('Ajuda')
                     .setDescription('Teste')
                     .setColor('#000000')
                     .addField('criar <nome>', 'Cria um novo grupo.')
                     .addField('add', 'Adiciona um usuario ao grupo.')
-                    .addField('remover', 'Remove um usuario do grupo');
+                    .addField('list', 'Bem, uma lista de grupos.')
+                    .addField('remover', 'Remove um usuario do grupo.');
                 interaction.reply({ content: 'teste', embeds: [embed] });
 
 
@@ -45,44 +45,59 @@ exports.default = {
                 if (args[1] == null || args[1] == '') {
                     return 'Passe um nome.';
                 }
-                await banco.cria_grupo(args[1], sevidor);
+                if (await cria_grupo(args[1], sevidor)) {
+                    return `Criado com sucesso, o grupo: ${args[1]}`;
+                } else return `algo deu Errado, ao criar: ${args[1]}`;
+
                 break;
             case 'add':
-                let grupos = await banco.get_grupo(sevidor);
+                let grupos = await get_grupo(sevidor);
 
+                if (grupos.length == 0) return 'Nenhum grupo cadastrado';
 
-                let list_grupo = MessageSelectMenu({
+                let list_grupo = new MessageSelectMenu({
                     customId: 'grupos_' + sevidor + '-' + data,
-                    max_values: 1,
-                    min_values: 1,
                     placeholder: 'Grupos'
                 });
 
                 for (let i in grupos) {
                     const grupo = grupos[i];
-                    list.addOptions([{ label: grupo.nome, value: grupo.id, }]);
+                    list_grupo.addOptions([{ label: grupo.nome, value: `${grupo.id}`, }]);
                 }
+                let users = await getUsers(interaction)
+                let usuarios = await get_users(interaction.guild.id);
 
-                let usuarios = await banco.getUsers(interaction.guild.id);
-
-                let list_user = MessageSelectMenu({
+                let list_user = new MessageSelectMenu({
                     customId: 'usuarios_' + sevidor + '-' + data,
-                    max_values: usuarios.length,
+                    max_values: users.length,
                     min_values: 1,
                     placeholder: 'Usuarios'
                 });
 
+
                 for (let i in usuarios) {
                     const user = usuarios[i];
-                    list.addOptions([{ label: user.nome, value: user.id, }]);
+                    const {
+                        username
+                    } = users.find((item) => {
+                        return item.id == user.usuario;
+                    }) ?? {};
+                    if (username == undefined) {
+                        continue;
+                    }
+
+                    list_user.addOptions([{ label: `@${username}`, value: `${user.u}` }]);
                 }
 
-                let btn = new Discord.MessageButton()
+                let btn = new MessageButton()
                     .setCustomId('btn_' + sevidor + '-' + data)
+                    .setStyle('PRIMARY')
                     .setLabel('Confirmar');
 
-                let row = MessageActionRow().addComponents([list_grupo, list_user, btn]);
-                interaction.channel.send({ content: 'Grupo Add', components: [row] });
+                let row = new MessageActionRow().addComponents([list_grupo]);
+                let row2 = new MessageActionRow().addComponents([list_user]);
+                let row3 = new MessageActionRow().addComponents([btn]);
+                let msg = await interaction.channel.send({ content: 'Grupo Add', components: [row, row2, row3] });
 
                 const filter_s = i => {
                     i.deferUpdate();
@@ -96,31 +111,49 @@ exports.default = {
                 };
                 const collector_btn = interaction.channel.createMessageComponentCollector({ filter, componentType: 'BUTTON', time: 15000 * 2 });
 
+                let usersV = [];
+                let gruposV = [];
+
                 collector_select.on('collect', async i => {
-                    i.deferReply();
+                    // i.deferReply();
+                    i.deferUpdate();
+                    if (i.customId == 'grupos_' + sevidor + '-' + data) {
+                        gruposV = i.values;
+                    } else if (i.customId == 'usuarios_' + sevidor + '-' + data) {
+                        usersV = i.values;
+                    }
                 });
 
                 collector_btn.on('collect', async i => {
                     if (i.customId === 'btn_' + sevidor + '-' + data) {
-                        let aux = await banco.grupo_add(args[1], i.values[0]);
-                        await i.update({ content: 'A button was clicked!' + aux, components: [] });
+                        if (usersV.length > 0 && gruposV.length > 0) {
+                            let aux = await add_grupo(usersV, gruposV[0]);
+                            await msg.edit({ content: aux.length + ' usuario adicionados no grupo!', components: [] });
+                        }
                     }
                 });
 
-                collector.on('end', collected => { });
+                collector_btn.on('end', collected => { });
                 break;
             case 'remove':
                 break;
             default:
                 interaction.reply({ content: 'Utilize /grupo help' });
                 break;
-
-
-
         }
     },
 };
 // as ICommand;
+
+async function getUsers(interaction) {
+    let members = await interaction.guild.members.list({ limit: 99 });
+    return members.filter((element) => {
+        return !element.user.bot;
+    }).map((value) => {
+        return value.user;
+    });
+}
+
 
 // module.exports.run = async (client, message, args) => {
 //     message.channel.send(`ping. latencia de ${Date.now() - message.createdTimestamp}ms.`);

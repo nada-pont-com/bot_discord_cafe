@@ -1,5 +1,6 @@
 const Discord = require("discord.js");
-const banco = require("./../data_base.js");
+const { usersCafe } = require("./../data_base.js");
+
 exports.default = {
     category: 'Comando para info em tabela',
     description: 'Comando para info em tabela',
@@ -9,7 +10,7 @@ exports.default = {
     callback: async ({ message, interaction, user, guild, args }) => {
         let msg = message || interaction;
         let users = await getUsers(msg);
-        let usersDados = await banco.usersCafe(users, msg.guild.id);
+        let usersDados = await usersCafe(users, msg.guild.id);
         sendEmbed(msg, users, usersDados);
     }
 }

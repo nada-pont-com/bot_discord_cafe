@@ -1,6 +1,6 @@
 const sqlite = require('sqlite3').verbose();
 let db = new sqlite.Database('banco.db');
-module.exports.start = () => {
+const start = () => {
     db.serialize(() => {
         db.run("CREATE TABLE if not exists usuario (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,id_usuario TEXT NOT NULL)");
         db.run("CREATE TABLE if not exists servidor (id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,id_servidor TEXT NOT NULL)");
@@ -19,7 +19,7 @@ module.exports.start = () => {
     });
 }
 
-module.exports.usersCafe = async (usuarios = [], servidor) => {
+const usersCafe = async (usuarios = [], servidor) => {
     // let promesa = new Promise((resolve, reject) => {
     // let list = [];
     let list = await select_bd(`SELECT s.id as s, 
@@ -91,7 +91,7 @@ async function insert_servidor_usuario(servidor_id, usuario_id) {
 }
 
 
-module.exports.getUsers = (servidor) => {
+const getUsers = (servidor) => {
     let promesa = new Promise((resolve, reject) => {
         let list = [];
         db.each(`SELECT s.id as s, u.id as u, us.sorteado, us.cafe, u.id_usuario as usuario, s.id_servidor as servidor
@@ -109,7 +109,7 @@ module.exports.getUsers = (servidor) => {
 }
 
 
-module.exports.updateUser = (user, servidor, vezes, sorteado) => {
+const updateUser = (user, servidor, vezes, sorteado) => {
     let promesa = new Promise(async (resolve, reject) => {
         let aux = await select_bd(`SELECT _us.id
             FROM usuario_servidor _us 
@@ -128,7 +128,7 @@ module.exports.updateUser = (user, servidor, vezes, sorteado) => {
     return promesa;
 }
 
-module.exports.log_cafe = (user, servidor) => {
+const log_cafe = (user, servidor) => {
     let promesa = new Promise((resolve, reject) => {
         db.run(`INSERT into log_cafe (id_usuario, id_servidor, data) VALUES (?,?,?)`, [user, servidor, new Date().toDateString()], function (erro) {
             if (erro) {
@@ -140,27 +140,44 @@ module.exports.log_cafe = (user, servidor) => {
     return promesa;
 }
 
-module.exports.cria_grupo = async (nome, servidor) => {
+const cria_grupo = async (nome, servidor) => {
     let id_s = (await select_bd('SELECT id from servidor WHERE id_servidor=?', [servidor]))[0];
     return await query_bd('INSERT into grupo (nome,servidor_id) values (?,?)', [nome, id_s['id']])
 }
 
-module.exports.grupo_add = async (users, grupo, type_user) => {
+const grupo_add = async (users, grupo) => {
     let list = [];
 
     for (let i in users) {
         const user = users[i];
-        list[list.length] = query_bd('INSERT into grupo_usuario (id_u,id_s) values (?,?)', [user, grupo]);
+        list[list.length] = query_bd('INSERT into grupo_usuario (id_u,id_g) values (?,?)', [user, grupo]);
     }
     list = await Promise.all(list);
     let retorno = [];
     for (let i in list) {
         retorno[i] = users[i] + ':' + list[i];
     }
-    return retorno.join(',');
+    return retorno;
 }
 
+const get_grupo = async (servidor) => {
+    let id_s = (await select_bd('SELECT id from servidor WHERE id_servidor=?', [servidor]))[0].id;
+    return await select_bd('SELECT id,nome from grupo WHERE servidor_id=?', [id_s]);
+}
 
+const get_users_grupo = async (servidor) => {
+    let id_s = (await select_bd('SELECT id from servidor WHERE id_servidor=?', [servidor]))[0].id;
+    return await select_bd(`
+        SELECT 
+            g.id,
+            g.nome,
+            gu.id_u
+        FROM grupo g
+        JOIN grupo_usuario gu on gu.id_g=g.id,
+        WHERE servidor_id=?
+        `, [id_s]
+    );
+}
 
 function query_bd(sql = '', params = []) {
     return new Promise((resolve, reject) => {
@@ -198,3 +215,6 @@ FROM "user" u
     left join servidor s on s.id_servidor = u.servidor 
 
 */
+// export const a = 10;
+
+module.exports = { add_grupo: grupo_add, cria_grupo, get_grupo, get_users_grupo, usersCafe, get_users: getUsers, update_user: updateUser, log_cafe };

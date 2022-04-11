@@ -1,6 +1,5 @@
 const Discord = require("discord.js");
-const banco = require("./../data_base.js");
-
+const { get_users } = require("./../data_base.js");
 
 exports.default = {
     category: 'Comando para info',
@@ -29,7 +28,7 @@ exports.default = {
                 return;
             }
         }
-        let list = await banco.getUsers(guild.id);
+        let list = await get_users(guild.id);
         let userDados = list.find((item) => {
             return item.id == userBusca.usuario;
         });

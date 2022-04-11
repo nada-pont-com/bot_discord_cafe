@@ -1,4 +1,4 @@
-const { Client, Intents, Message, MessageSelectMenu } = require("discord.js");
+const { Client, Intents } = require("discord.js");
 const WOKCommands = require("wokcommands");
 const path = require("path");
 const config = require("./config.json");
@@ -22,19 +22,21 @@ client.on('ready', async (cliente) => {
     });
 });
 
-client.on('interactionCreate', async (interaction) => {
-    if (interaction.isCommand()) {
-        return;
-    }
+// client.on('interactionCreate', async (interaction) => {
+//     if (interaction.isCommand()) {
+//         return;
+//     }
 
-    let a = await interaction.channel.createMessageComponentCollector({ componentType: 'BUTTON' });
-    a.on('collect', async (a) => {
+//     let a = await interaction.channel.createMessageComponentCollector({ componentType: 'BUTTON' });
+//     a.on('collect', async (a) => {
 
-    })
+//         // a.values; // list : string
 
-    // let teste = MessageSelectMenu({ label: 'Teste', value: '10' });
+//     })
 
-    // interaction.channel.send({ components: teste });
-});
+//     let teste = MessageSelectMenu({ label: 'Teste', value: '10' });
+
+//     interaction.channel.send({ components: teste });
+// });
 
 client.login(config.BOT_TOKEN);

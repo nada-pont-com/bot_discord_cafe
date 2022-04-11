@@ -1,5 +1,5 @@
 const Discord = require("discord.js");
-const banco = require("./../data_base.js");
+const { usersCafe, update_user } = require("./../data_base.js");
 
 let isMessage = false;
 let _client;
@@ -75,12 +75,12 @@ function reaction(msg, valor, user, original, args = [], repeat = []) {
     colector.on('collect', (reaction) => {
         if (reaction.emoji.name === '🔄') {
 
-            banco.updateUser(valor.id, msg.guild.id, parseInt(valor.cafe), parseInt(valor.sorteado) + 1);
+            update_user(valor.id, msg.guild.id, parseInt(valor.cafe), parseInt(valor.sorteado) + 1);
             msg.delete();
             repeat.push(user);
             start(msg, args, original, repeat);
         } else if (reaction.emoji.name === '✅') {
-            banco.updateUser(valor.id, msg.guild.id, parseInt(valor.cafe) + 1, parseInt(valor.sorteado) + 1);
+            update_user(valor.id, msg.guild.id, parseInt(valor.cafe) + 1, parseInt(valor.sorteado) + 1);
 
             // msg.deleteReply();
             // if (args[0] != undefined) {
@@ -118,7 +118,7 @@ async function getUsers(message) {
 }
 
 async function getUsersValidos(users, message, repeat = []) {
-    let listUsers = await banco.usersCafe(users, message.guild.id);
+    let listUsers = await usersCafe(users, message.guild.id);
 
     listUsers = listUsers.filter((element) => {
         let valida = true;
