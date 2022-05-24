@@ -53,7 +53,7 @@ const usersCafe = async (usuarios = [], servidor) => {
     return list;
 }
 
-async function insert(servidor, usuario) {
+async function insert(usuario, servidor) {
     let usuario_w = select_bd(`SELECT u.id as usuario FROM usuario u where u.id_usuario =?`, [usuario]);
     let servidor_w = select_bd(`SELECT s.id as servidor FROM servidor s WHERE s.id_servidor=?`, [servidor]);
     let list = await Promise.all([usuario_w, servidor_w]);
@@ -62,7 +62,7 @@ async function insert(servidor, usuario) {
     let id_usuario;
     let id_servidor;
     if (usuario_w.length == 0) {
-        id_usuario = await insert_usuario(usuario);
+        id_usuario = await insert_usuario(usuario); // 414887164665397258 // 414887164665397258
     } else {
         id_usuario = usuario_w[0].usuario
     }
